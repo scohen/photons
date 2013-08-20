@@ -7,7 +7,7 @@
 #include <tlc_servos.h>
 #include <tlc_shifts.h>
 
-#include "Protonpack.h"
+#include "ProtonPack.h"
 
 int increment = 20;
 
@@ -72,7 +72,7 @@ void _pp_defaultUpdatePowercell(Pack* pack, Powercell* cell) {
     }
 }
 
-Protonpack::Protonpack() {
+ProtonPack::ProtonPack() {
     _cell.last_updated = 0;
     _cell.current_led = 0;
     _cell.initializing = true;
@@ -98,35 +98,35 @@ Protonpack::Protonpack() {
     setPowercellUpdateCallback(_pp_defaultUpdatePowercell);
 }
 
-void Protonpack::initialize() {
+void ProtonPack::initialize() {
     Tlc.init();
 }
 
-void Protonpack::_updatePowercell() {
+void ProtonPack::_updatePowercell() {
     _update_powercell_cb(&_pack, &_cell);
     for(int i=0; i < _cell.num_leds; i++) {
         Tlc.set(i, _cell.leds[i]);
     }
 }
 
-void Protonpack::_updateCyclotron() {
+void ProtonPack::_updateCyclotron() {
     _update_cyclotron_cb(&_pack, &_cyclotron);
     for(int i=0; i < 4; i++) {
         Tlc.set(i, _cyclotron.leds[i]);
     }
 }
 
-void Protonpack::update() {
+void ProtonPack::update() {
     _pack.now = millis();
     _updatePowercell();
     //_updateCyclotron();
     Tlc.update();
 }
 
-void Protonpack::setPowercellUpdateCallback(updatePowercellCallback cb) {
+void ProtonPack::setPowercellUpdateCallback(updatePowercellCallback cb) {
     _update_powercell_cb = cb;
 }
 
-void Protonpack::setCyclotronUpdateCallback(updateCyclotronCallback cb) {
+void ProtonPack::setCyclotronUpdateCallback(updateCyclotronCallback cb) {
     _update_cyclotron_cb = cb;
 }

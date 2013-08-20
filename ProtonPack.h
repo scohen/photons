@@ -1,6 +1,6 @@
 
-#ifndef Protonpack_h
-#define Protonpack_h
+#ifndef ProtonPack_h
+#define ProtonPack_h
 
 #include "Arduino.h"
 
@@ -36,9 +36,9 @@ typedef struct _protonpack {
 typedef void (*updatePowercellCallback)(Pack*, Powercell*);
 typedef void (*updateCyclotronCallback)(Pack*, Cyclotron*);
 
-class Protonpack {
+class ProtonPack {
 public:
-    Protonpack();
+    ProtonPack();
     void update();
     void initialize();
     void setPowercellUpdateCallback(updatePowercellCallback);
