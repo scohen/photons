@@ -9,7 +9,8 @@
 
 #include "ProtonPack.h"
 
-int increment = 20;
+int increment = 50;
+int last_debounce_time = 0;
 
 int pp_increment_to_max(int current, int max_value) {
     int incremented = current += 1;
@@ -18,7 +19,6 @@ int pp_increment_to_max(int current, int max_value) {
     }
     return 0;
 }
-
 
 void _pp_defaultUpdateCyclotron(Pack* pack, Cyclotron* cyclotron) {
 
@@ -40,87 +40,138 @@ void _pp_defaultUpdateCyclotron(Pack* pack, Cyclotron* cyclotron) {
 
 void _pp_defaultUpdatePowercell(Pack* pack, Powercell* cell) {
     int last_updated = pack->now - cell->last_updated;
-
-    if (cell->initializing) {
-        int elapsed_since_start = pack-> now - pack->started_at;
-        if (elapsed_since_start > 5000) {
-            cell->initializing = false;
-        }
-
+    
+    if (pack->is_initializing) {        
         cell->current_brightness += increment;
-
-        if (cell->current_brightness >= 1000 || cell->current_brightness <=0) {
+        if (cell->current_brightness >= cell->MAX_BRIGHTNESS || cell->current_brightness <=0) {
             increment *= -1;
         }
 
         for(int i=0; i < cell->num_leds; i++) {
             cell->leds[i] = cell->current_brightness;
-        }
+        }        
 
     } else {
-        if (last_updated > cell->UPDATE_RATE) {
-            for (int i=0; i<= cell->num_leds; i++) {
-                int val = 0;
-                if (i < cell->current_led) {
-                    val = cell->MAX_BRIGHTNESS;
+        if (last_updated >= cell->UPDATE_RATE) {
+            if (cell->current_led == 0){
+                for (int i=0; i<= cell->num_leds; i++) {
+                  cell->leds[i] = 0;  
                 }
-                cell->leds[i] = val;
             }
+            cell->leds[cell->current_led] = cell->MAX_BRIGHTNESS;            
             cell->current_led = pp_increment_to_max(cell->current_led, cell->num_leds + 1);
             cell->last_updated = millis();
         }
     }
 }
 
-ProtonPack::ProtonPack() {
-    _cell.last_updated = 0;
-    _cell.current_led = 0;
-    _cell.initializing = true;
-    _cell.current_brightness = 0;
-    for(int i=0; i < _cell.num_leds; i++) {
-        _cell.leds[i] = 0;
-    }
-
-    _cyclotron.last_updated = 0;
-    _cyclotron.current_led = -1;
-    _cyclotron.current_brightness = 0;
-    _cyclotron.fade_started = 0;
-    _cyclotron.fade_duration = 250;
-    for (int i=0; i < 4; i++) {
-        _cyclotron.leds[i] = 0;
-    }
-
-    _pack.powercell = _cell;
-    _pack.cyclotron = _cyclotron;
-    _pack.now = millis();
-    _pack.started_at = _pack.now;
+ProtonPack::ProtonPack(int power_switch_id,
+                       int activate_switch_id,
+                       int cyclotron_offset,
+                       int powercell_offset) {
+    _power_switch_id = power_switch_id;
+    _activate_switch_id = activate_switch_id;
+    _cyclotron_offset = cyclotron_offset;
+    _powercell_offset = powercell_offset;    
     setCyclotronUpdateCallback(_pp_defaultUpdateCyclotron);
     setPowercellUpdateCallback(_pp_defaultUpdatePowercell);
+    reset();
+}
+
+void resetCyclotron(Cyclotron* _cyclotron) {
+    _cyclotron->last_updated = 0;
+    _cyclotron->current_led = -1;
+    _cyclotron->current_brightness = 0;
+    for (int i=0; i < 4; i++) {
+        _cyclotron->leds[i] = 0;
+    }
+}
+
+void resetPowercell(Powercell* _cell) {
+    _cell->last_updated = 0;
+    _cell->current_led = 0;
+    _cell->initializing = true;
+    _cell->current_brightness = 0;
+    for(int i=0; i < _cell->num_leds; i++) {
+        _cell->leds[i] = 0;
+    }
+}
+
+void resetPack(Pack* _pack) {
+    _pack->now = millis();
+    _pack->started_at = _pack->now;
+    _pack->is_on = false;
+    _pack->is_activated = false;
+    _pack->is_initializing = false;
+}
+
+void ProtonPack::reset() {
+    resetPowercell(&_cell);
+    resetCyclotron(&_cyclotron);
+    resetPack(&_pack);
+    _pack.powercell = _cell;
+    _pack.cyclotron = _cyclotron;        
 }
 
 void ProtonPack::initialize() {
     Tlc.init();
+    Serial.begin(9600);
+    pinMode(_power_switch_id, INPUT);
 }
 
 void ProtonPack::_updatePowercell() {
     _update_powercell_cb(&_pack, &_cell);
     for(int i=0; i < _cell.num_leds; i++) {
-        Tlc.set(i, _cell.leds[i]);
+        Tlc.set(_powercell_offset + i, _cell.leds[i]);
     }
 }
 
 void ProtonPack::_updateCyclotron() {
     _update_cyclotron_cb(&_pack, &_cyclotron);
     for(int i=0; i < 4; i++) {
-        Tlc.set(i, _cyclotron.leds[i]);
+        Tlc.set(_cyclotron_offset + i, _cyclotron.leds[i]);
     }
 }
 
 void ProtonPack::update() {
     _pack.now = millis();
-    _updatePowercell();
-    //_updateCyclotron();
-    Tlc.update();
+    int buttonState = digitalRead(_power_switch_id);
+    boolean shutting_down = false;
+    boolean starting_up = false;
+    _pack.is_initializing = (_pack.now - _pack.started_at) < 5000;
+    
+    if ( millis() - last_debounce_time > 150) {
+        if (buttonState == HIGH) {
+            if(_pack.is_on) {
+                shutting_down = true;
+            } else {
+                starting_up = true;
+            }
+            _pack.is_on = !_pack.is_on;
+            last_debounce_time = millis();
+            _pack.now = last_debounce_time;            
+        }
+    }
+
+    if (starting_up) {
+        _pack.started_at = _pack.now;
+        _cell.last_updated = _pack.now;
+        _cyclotron.last_updated = _pack.now;
+        
+    } else if (shutting_down) {
+        resetPack(&_pack);
+        resetCyclotron(&_cyclotron);
+        resetPowercell(&_cell);
+        Tlc.clear();
+        Tlc.update();
+    }
+
+    if (_pack.is_on) {
+        _updatePowercell();
+        _updateCyclotron();
+        Tlc.update();
+    }
+
 }
 
 void ProtonPack::setPowercellUpdateCallback(updatePowercellCallback cb) {
