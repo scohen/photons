@@ -32,6 +32,11 @@ typedef struct _graph {
     int iteration;
 }Graph;
 
+typedef struct _nozzle {
+    unsigned long last_updated;
+    int led;
+} Nozzle;
+
 typedef struct _protonpack { 
     int last_updated;
     unsigned long now;
@@ -42,11 +47,13 @@ typedef struct _protonpack {
     Powercell powercell;
     Cyclotron cyclotron;
     Graph graph;
+    Nozzle nozzle;
 } Pack;
 
 typedef void (*updatePowercellCallback)(Pack*, Powercell*);
 typedef void (*updateCyclotronCallback)(Pack*, Cyclotron*);
 typedef void (*updateGraphCallback)(Pack*, Graph*);
+typedef void (*updateNozzleCallback)(Pack*, Nozzle*);
 
 class ProtonPack {
 public:
@@ -61,15 +68,18 @@ public:
     void setPowercellUpdateCallback(updatePowercellCallback);
     void setCyclotronUpdateCallback(updateCyclotronCallback);
     void setGraphUpdateCallback(updateGraphCallback);
+    void setNozzleUpdateCallback(updateNozzleCallback);
     
 private:
     Pack _pack;
     Powercell _cell;
     Cyclotron _cyclotron;
     Graph _graph;
+    Nozzle _nozzle;
     updatePowercellCallback _update_powercell_cb;
     updateCyclotronCallback _update_cyclotron_cb;
     updateGraphCallback _update_graph_cb;
+    updateNozzleCallback _update_nozzle_cb;
     int _cyclotron_offset;
     int _powercell_offset;
     int _power_switch_id;
@@ -80,6 +90,7 @@ private:
     void _updatePowercell();
     void _updateCyclotron();
     void _updateGraph();
+    void _updateNozzle();
 };
 
 #endif

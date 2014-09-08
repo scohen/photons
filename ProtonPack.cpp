@@ -16,6 +16,14 @@ int last_debounce_time = 0;
 int direction = 1;
 
 int pp_increment_to_max(int current, int max_value) {    
+    int incremented = current += 1;
+    if (incremented >= max_value){
+        return 0;
+    }
+    return incremented;
+}
+
+int pp_decrement(int current, int max_value) {    
     int incremented = current -= 1;
     if (incremented < 0 ){
         return max_value;
@@ -23,29 +31,32 @@ int pp_increment_to_max(int current, int max_value) {
     return incremented;
 }
 
-void _pp_defaultUpdateCyclotron(Pack* pack, Cyclotron* cyclotron) {
+void _pp_defaultUpdateNozzle(Pack* pack, Nozzle* nozzle) {
+    nozzle->led = 4000;
+}
 
+void _pp_defaultUpdateCyclotron(Pack* pack, Cyclotron* cyclotron) {
     static int BRIGHTNESS_INCREMENT = 83;
-    int last_updated = pack->now - cyclotron->last_updated;
-    if (last_updated > 1000) {
+    unsigned long last_updated = pack->now - cyclotron->last_updated;
+        if (last_updated >= 1000) {
         cyclotron->current_brightness = 0;
         cyclotron->current_led = pp_increment_to_max(cyclotron->current_led, 4);
         cyclotron->last_updated = pack->now;
     } else if ( last_updated < 500 ) {
         cyclotron->current_brightness += BRIGHTNESS_INCREMENT;
         cyclotron->leds[cyclotron->current_led] = cyclotron->current_brightness;
+        
     } else if (cyclotron->current_brightness > 0) {
         cyclotron->current_brightness -= BRIGHTNESS_INCREMENT;
         cyclotron->leds[cyclotron->current_led] = cyclotron->current_brightness;
     }
+
 }
 
 void _pp_defaultUpdatePowercell(Pack* pack, Powercell* cell) {
-    int last_updated = pack->now - cell->last_updated;
-    
+    unsigned long last_updated = pack->now - cell->last_updated;
     if (last_updated >= cell->UPDATE_RATE){
         if (pack->is_initializing) {
-            int r = random(0, cell->num_leds);
             for(int i=0; i < cell->num_leds; i++){
                 if (i == cell->current_led){
                     cell->leds[i] = cell->MAX_BRIGHTNESS;
@@ -61,7 +72,7 @@ void _pp_defaultUpdatePowercell(Pack* pack, Powercell* cell) {
             if (cell->current_led > 1) {
                 cell->leds[cell->current_led] = cell->MAX_BRIGHTNESS / 4;
             }
-            cell->current_led = pp_increment_to_max(cell->current_led, cell->num_leds - 1);            
+            cell->current_led = pp_decrement(cell->current_led, cell->num_leds - 1);            
             cell->current_led %= cell->num_leds;
         } else {
             if (cell->current_led == cell->num_leds - 1){
@@ -70,75 +81,68 @@ void _pp_defaultUpdatePowercell(Pack* pack, Powercell* cell) {
                 }
             }
             cell->leds[cell->current_led] = cell->MAX_BRIGHTNESS;            
-            cell->current_led = pp_increment_to_max(cell->current_led, cell->num_leds - 1);            
+            cell->current_led = pp_decrement(cell->current_led, cell->num_leds - 1);            
         }
         cell->last_updated = millis();
     }
 }
 
-void _pp_defaultUpdateGraph(Pack* pack, Graph* graph){    
-    int M = 1000;
-    int H = 4000;
-    int O = 0;
+void _pp_defaultUpdateGraph(Pack* pack, Graph* graph){
+    
+    int O = 1000;
+    int o = 4000;
+    int _ = 0;
     const int firing_sequence[][15] = {
-      {O, O, O, O, O, O, O, H, O, O, O, O, O, O, O},
-      {O, O, O, O, O, O, M, H, M, O, O, O, O, O, O},
-      {O, O, O, O, O, M, H, O, H, M, O, O, O, O, O},
-      {O, O, O, O, M, H, O, O, O, H, M, O, O, O, O},
-      {O, O, O, M, H, O, O, O, O, O, H, M, O, O, O},
-      {O, O, M, H, O, O, O, O, O, O, O, H, M, O, O},
-      {O, M, H, O, O, O, O, O, O, O, O, O, H, M, O},
-      {M, H, O, O, O, O, O, O, O, O, O, O, O, H, M},
+      {_, _, _, _, _, _, _, O, _, _, _, _, _, _, _},
+      {_, _, _, _, _, _, o, O, o, _, _, _, _, _, _},
+      {_, _, _, _, _, o, O, _, O, o, _, _, _, _, _},
+      {_, _, _, _, o, O, _, _, _, O, o, _, _, _, _},
+      {_, _, _, o, O, _, _, _, _, _, O, o, _, _, _},
+      {_, _, o, O, _, _, _, _, _, _, _, O, o, _, _},
+      {_, o, O, _, _, _, _, _, _, _, _, _, O, o, _},
+      {o, O, _, _, _, _, _, _, _, _, _, _, _, O, o},
     };
     const int normal_sequence[][15] = {
-        {O, O, O, O, O, O, O, O, O, O, O, O, O, O, M},
-        {O, O, O, O, O, O, O, O, O, O, O, O, O, M, H},
-        {O, O, O, O, O, O, O, O, O, O, O, O, M, H, H},
-        {O, O, O, O, O, O, O, O, O, O, O, M, H, H, H},
-        {O, O, O, O, O, O, O, O, O, O, M, H, H, H, H},
-        {O, O, O, O, O, O, O, O, O, M, H, H, H, H, H},
-        {O, O, O, O, O, O, O, O, M, H, H, H, H, H, H},
-        {O, O, O, O, O, O, O, M, H, H, H, H, H, H, H},
-        {O, O, O, O, O, O, O, H, H, H, H, H, H, H, H},
-        {O, O, O, O, O, O, O, M, H, H, H, H, H, H, H},
-        {O, O, O, O, O, O, O, O, M, H, H, H, H, H, H},
-        {O, O, O, O, O, O, O, O, O, M, H, H, H, H, H},
-        {O, O, O, O, O, O, O, O, O, O, M, H, H, H, H},
-        {O, O, O, O, O, O, O, O, O, O, O, M, H, H, H},
-        {O, O, O, O, O, O, O, O, O, O, O, O, M, H, H},
-        {O, O, O, O, O, O, O, O, O, O, O, O, O, M, H},
-        {O, O, O, O, O, O, O, O, O, O, O, O, O, O, M},
-        {O, O, O, O, O, O, O, O, O, O, O, O, O, O, O},
+        {o, _, _, _, _, _, _, _, _, _, _, _, _, _, _},
+        {O, o, _, _, _, _, _, _, _, _, _, _, _, _, _},
+        {O, O, o, _, _, _, _, _, _, _, _, _, _, _, _},
+        {O, O, O, o, _, _, _, _, _, _, _, _, _, _, _},
+        {O, O, O, O, o, _, _, _, _, _, _, _, _, _, _},
+        {O, O, O, O, O, o, _, _, _, _, _, _, _, _, _},
+        {O, O, O, O, O, O, o, _, _, _, _, _, _, _, _},
+        {O, O, O, O, O, O, O, o, _, _, _, _, _, _, _},
+        {O, O, O, O, O, O, O, O, _, _, _, _, _, _, _},
+        {O, O, O, O, O, O, O, o, _, _, _, _, _, _, _},
+        {O, O, O, O, O, O, o, _, _, _, _, _, _, _, _},
+        {O, O, O, O, O, o, _, _, _, _, _, _, _, _, _},
+        {O, O, O, O, o, _, _, _, _, _, _, _, _, _, _},
+        {O, O, O, o, _, _, _, _, _, _, _, _, _, _, _},
+        {O, O, o, _, _, _, _, _, _, _, _, _, _, _, _},
+        {O, o, _, _, _, _, _, _, _, _, _, _, _, _, _},
+        {o, _, _, _, _, _, _, _, _, _, _, _, _, _, _},
+        {_, _, _, _, _, _, _, _, _, _, _, _, _, _, _},
     };
     
 
-    int last_updated = pack->now - graph->last_updated;
+    unsigned long last_updated = pack->now - graph->last_updated;
     
-    /*if (last_updated >= 50){
-        graph->leds[14] = 2000;
-
+    if (last_updated >= 40){
         if(pack->is_firing){
             for(int i=0; i < graph->num_leds; i++){
                 graph->leds[i] = firing_sequence[graph->iteration][i];
-            }                        
+            }
+            graph->iteration++;
             graph->iteration %= 8;            
         } else {
             for(int i=0; i < graph->num_leds; i++){
                 graph->leds[i] = normal_sequence[graph->iteration][i];
-            }                        
+            }
+            graph->iteration++;
             graph->iteration %= 18;            
         }
-        graph->last_updated = millis();
-        graph->iteration++;
+        graph->last_updated = millis(); 
     }
-    */
-    for(int i=0; i < graph->num_leds; i++){
-        if (rand() % 3 == 0){
-            graph->leds[i] = H;
-        } else{
-            graph->leds[i] = O;
-        }
-    }
+    
 }
 
 ProtonPack::ProtonPack(int power_switch_id,
@@ -154,7 +158,13 @@ ProtonPack::ProtonPack(int power_switch_id,
     setCyclotronUpdateCallback(_pp_defaultUpdateCyclotron);
     setPowercellUpdateCallback(_pp_defaultUpdatePowercell);
     setGraphUpdateCallback(_pp_defaultUpdateGraph);
+    setNozzleUpdateCallback(_pp_defaultUpdateNozzle);
     reset();
+}
+
+void resetNozzle(Nozzle* _nozzle) {
+    _nozzle->last_updated = 0;
+    _nozzle->led = 0;
 }
 
 void resetCyclotron(Cyclotron* _cyclotron) {
@@ -198,18 +208,17 @@ void ProtonPack::reset() {
     resetCyclotron(&_cyclotron);
     resetPack(&_pack);
     resetGraph(&_graph);
+    resetNozzle(&_nozzle);
     _pack.powercell = _cell;
     _pack.cyclotron = _cyclotron;
     _pack.graph = _graph;
+    _pack.nozzle = _nozzle;
 }
 
 void ProtonPack::initialize() {
-    Tlc.init();    
+    Tlc.init();
     pinMode(_power_switch_id, INPUT);
-    digitalWrite(_power_switch_id, HIGH);
     
-    pinMode(_activate_switch_id, INPUT);
-    digitalWrite(_activate_switch_id, HIGH);
     
     _power_button_state = 0;
     _activate_button_state = 0;
@@ -236,12 +245,17 @@ void ProtonPack::_updateGraph(){
     }
 }
 
+void ProtonPack::_updateNozzle() {
+    _update_nozzle_cb(&_pack, &_nozzle);
+    Tlc.set(_graph_offset + 16, _nozzle.led);
+}
+
 void ProtonPack::update() {
     _pack.now = millis();
-    int powerRead = analogRead(_power_switch_id);
-    int activityRead = analogRead(_activate_switch_id);
-    int latestPowerButtonState = powerRead > 1010;
-    int latestActivateButtonState = activityRead > 1010;
+    
+    int latestPowerButtonState = digitalRead(_power_switch_id);;
+    int latestActivateButtonState = digitalRead(_activate_switch_id);;
+
     boolean shutting_down = false;
     boolean starting_up = false;
     boolean is_initializing_now = (_pack.now - _pack.started_at) < 5000;
@@ -253,21 +267,9 @@ void ProtonPack::update() {
     }
     
     _pack.is_initializing = is_initializing_now;
-    /*
-    Serial.print("Activate: ");
-    Serial.print(activityRead);
-    Serial.print("\n");
-    Serial.print("Power: ");
-    Serial.print(powerRead);
-    Serial.print("\n");
-*/
-    if ( millis() - last_debounce_time > 300) {
+
+    if (millis() - last_debounce_time > 300) {
         if ( latestPowerButtonState != _power_button_state){
-            Serial.print("SWITCH\n\tpower:");
-            Serial.print(powerRead);
-            Serial.print("\n\tactivity:");
-            Serial.print(activityRead);
-            Serial.print("\n");
             if(_pack.is_on) {
                 shutting_down = true;
             } else {
@@ -281,8 +283,6 @@ void ProtonPack::update() {
         if (_pack.is_on){
             if (latestActivateButtonState != _activate_button_state){            
                 _pack.is_firing = !_pack.is_firing;
-                Serial.print("Firing ");
-                Serial.println(_pack.is_firing);
                 _activate_button_state = latestActivateButtonState;
                 last_debounce_time = millis();
             }
@@ -306,6 +306,7 @@ void ProtonPack::update() {
         _updatePowercell();
         _updateCyclotron();
         _updateGraph();
+        _updateNozzle();
         Tlc.update();
     }
 
@@ -321,4 +322,8 @@ void ProtonPack::setCyclotronUpdateCallback(updateCyclotronCallback cb) {
 
 void ProtonPack::setGraphUpdateCallback(updateGraphCallback cb) {
     _update_graph_cb = cb;
+}
+
+void ProtonPack::setNozzleUpdateCallback(updateNozzleCallback cb) {
+    _update_nozzle_cb = cb;
 }
