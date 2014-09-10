@@ -111,13 +111,11 @@ void ProtonPack::update() {
     if (is_initializing_now && ! _pack.is_initializing) {
         for(int i=0; i < _components.size(); i++) {
             PackComponent *c = _components[i];
-            Serial.println("Pack init start");
             c->onPackInitStart(&_pack);
         }
     } else if (!is_initializing_now && _pack.is_initializing) {
         for(int i=0; i < _components.size(); i++) {
             PackComponent *c = _components[i];
-            Serial.println("Pack init stop");
             c->onPackInitComplete(&_pack);
         }
     }
@@ -126,7 +124,6 @@ void ProtonPack::update() {
 
     if (millis() - last_debounce_time > 300) {
         if ( latestPowerButtonState != _power_button_state) {
-            Serial.println("Switch detected");
             if(_pack.is_on) {
                 shutting_down = true;
             } else {
@@ -140,6 +137,17 @@ void ProtonPack::update() {
         if (_pack.is_on) {
             if (latestActivateButtonState != _activate_button_state) {
                 _pack.is_firing = !_pack.is_firing;
+                if (_pack.is_firing) {
+                    for(int i=0; i < _components.size(); i++) {
+                        PackComponent *c = _components[i];
+                        c->onFiringStart(&_pack);
+                    }
+                } else {
+                    for(int i=0; i < _components.size(); i++) {
+                        PackComponent *c = _components[i];
+                        c->onFiringStop(&_pack);
+                    }
+                }
                 _activate_button_state = latestActivateButtonState;
                 last_debounce_time = millis();
             }
@@ -149,14 +157,13 @@ void ProtonPack::update() {
     if (starting_up) {
         _pack.started_at = _pack.now;
         for(int i=0; i < _components.size(); i++) {
-            Serial.println("Calling onPackStartUp");
             PackComponent *c = _components[i];
+            c->reset(&_pack);
             c->onPackStartUp(&_pack);
         }
 
     } else if (shutting_down) {
         for(int i=0; i < _components.size(); i++) {
-            Serial.println("Calling onPackShutDown");
             PackComponent *c = _components[i];
             c->onPackShutDown(&_pack);
         }
