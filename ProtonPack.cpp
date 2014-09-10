@@ -1,11 +1,6 @@
 #include "Arduino.h"
-//#include <tlc_fades.h>
 #include <tlc_config.h>
-//#include <tlc_animations.h>
-//#include <tlc_progmem_utils.h>
 #include <Tlc5940.h>
-//#include <tlc_servos.h>
-//#include <tlc_shifts.h>
 #include <typeinfo>
 #include "ProtonPack.h"
 
