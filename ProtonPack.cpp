@@ -33,7 +33,7 @@ void PackComponent::setLed(int ledNum, int val) {
 }
 
 
-void PackComponent::reset(Pack* pack) {
+void PackComponent::reset(Pack pack) {
     _last_updated = 0;
     _next_call_time = 0;
 }
@@ -46,16 +46,17 @@ bool PackComponent::isReadyToUpdate() {
     return _next_call_time <= millis();
 }
 
-void PackComponent::onUpdate(Pack* pack) {
+void PackComponent::onUpdate(Pack pack) {
     Serial.println("onUpdate for PackComponent");
 }
-void PackComponent::onActivateButtonPress(Pack* pack){}
-void PackComponent::onFiringStart(Pack* pack){}
-void PackComponent::onFiringStop(Pack* pack){}
-void PackComponent::onPackStartUp(Pack* pack){}
-void PackComponent::onPackShutDown(Pack* pack){}
-void PackComponent::onPackInitStart(Pack* pack){}
-void PackComponent::onPackInitComplete(Pack* pack){}
+
+void PackComponent::onActivateButtonPress(Pack pack){}
+void PackComponent::onFiringStart(Pack pack){}
+void PackComponent::onFiringStop(Pack pack){}
+void PackComponent::onPackStartUp(Pack pack){}
+void PackComponent::onPackShutDown(Pack pack){}
+void PackComponent::onPackInitStart(Pack pack){}
+void PackComponent::onPackInitComplete(Pack pack){}
 
 
 ProtonPack::ProtonPack(int power_switch_id,
@@ -76,7 +77,7 @@ void resetPack(Pack* _pack) {
 void ProtonPack::reset() {
     Tlc.clear();
     for(int i=0; i < _components.size(); i++) {
-        _components[i]->reset(&_pack);
+        _components[i]->reset(_pack);
     }
 }
 
@@ -106,12 +107,12 @@ void ProtonPack::update() {
     if (is_initializing_now && ! _pack.is_initializing) {
         for(int i=0; i < _components.size(); i++) {
             PackComponent *c = _components[i];
-            c->onPackInitStart(&_pack);
+            c->onPackInitStart(_pack);
         }
     } else if (!is_initializing_now && _pack.is_initializing) {
         for(int i=0; i < _components.size(); i++) {
             PackComponent *c = _components[i];
-            c->onPackInitComplete(&_pack);
+            c->onPackInitComplete(_pack);
         }
     }
 
@@ -135,12 +136,12 @@ void ProtonPack::update() {
                 if (_pack.is_firing) {
                     for(int i=0; i < _components.size(); i++) {
                         PackComponent *c = _components[i];
-                        c->onFiringStart(&_pack);
+                        c->onFiringStart(_pack);
                     }
                 } else {
                     for(int i=0; i < _components.size(); i++) {
                         PackComponent *c = _components[i];
-                        c->onFiringStop(&_pack);
+                        c->onFiringStop(_pack);
                     }
                 }
                 _activate_button_state = latestActivateButtonState;
@@ -153,14 +154,14 @@ void ProtonPack::update() {
         _pack.started_at = _pack.now;
         for(int i=0; i < _components.size(); i++) {
             PackComponent *c = _components[i];
-            c->reset(&_pack);
-            c->onPackStartUp(&_pack);
+            c->reset(_pack);
+            c->onPackStartUp(_pack);
         }
 
     } else if (shutting_down) {
         for(int i=0; i < _components.size(); i++) {
             PackComponent *c = _components[i];
-            c->onPackShutDown(&_pack);
+            c->onPackShutDown(_pack);
         }
         Tlc.clear();
     }
@@ -169,7 +170,7 @@ void ProtonPack::update() {
         for(int i=0; i < _components.size(); i++) {
             PackComponent *c = _components[i];
             if (c->isReadyToUpdate()) {
-                c->onUpdate(&_pack);
+                c->onUpdate(_pack);
             }
         }
     }

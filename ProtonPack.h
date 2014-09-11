@@ -74,15 +74,15 @@ public:
     unsigned long _next_call_time;
     void callAgainIn(int num_millis);
     bool isReadyToUpdate();
-    virtual void onUpdate(Pack* pack);
-    virtual void onActivateButtonPress(Pack* pack);
-    virtual void onFiringStart(Pack* pack);
-    virtual void onFiringStop(Pack* pack);
-    virtual void onPackStartUp(Pack* pack);
-    virtual void onPackShutDown(Pack* pack);
-    virtual void onPackInitStart(Pack* pack);
-    virtual void onPackInitComplete(Pack* pack);
-    virtual void reset(Pack* pack);
+    virtual void onUpdate(Pack pack);
+    virtual void onActivateButtonPress(Pack pack);
+    virtual void onFiringStart(Pack pack);
+    virtual void onFiringStop(Pack pack);
+    virtual void onPackStartUp(Pack pack);
+    virtual void onPackShutDown(Pack pack);
+    virtual void onPackInitStart(Pack pack);
+    virtual void onPackInitComplete(Pack pack);
+    virtual void reset(Pack pack);
 
 protected:
     int offset;
