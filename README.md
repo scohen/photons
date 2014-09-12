@@ -5,9 +5,7 @@ Arduino library for controlling a Proton Pack or anything else connected to TLC 
 
 So it's come to this, you're building a proton pack. Even worse, you're going the Arduino route and are now scouring the internet for help. Congratulations, you've found some. 
 
-What we have here is a library for controlling your proton pack. The setup it works with is as follows: You have an arduino of some kind, and the lights in the pack are controlled by several [TLC 5940](http://www.ti.com/product/tlc5940) chips. The advantage of using these chips over direct wiring is that you can control literally hundreds of LEDs with one chip. You can also use shift registers, but you'll have to solder a bunch of resistors, which is not fun.
-
-The photons library emits events based on switch throws and button presses. In order to use it, you define subclasses of `PackComponent` and implement the callbacks for the event you want. When a button press (or other pack event) happens, your callback is called, and passed a `pack` data structure. You can then manipulate the internal state of your component and turn lights on and off. 
+What we have here is a library for controlling your proton pack. The library assumes the following setup: You have an arduino of some kind, and the lights in the pack are controlled by several [TLC 5940](http://www.ti.com/product/tlc5940) chips. The advantage of using these chips over direct wiring is that you can control literally hundreds of LEDs with one arduino. You can also use shift registers, but you'll have to solder a bunch of resistors, which is not fun.
 
 One of the flaws I saw in current pack libraries was overuse of the `delay` function. There was code like this:
 ```C++
@@ -33,6 +31,8 @@ void loop()
   delay(50);
   digitalWrite(24, HIGH)
 ```
+
+Instead of this, the photons library emits events based on switch throws and button presses. In order to use it, you define subclasses of `PackComponent` and implement the callbacks for the event you want. When a button press (or other pack event) happens, your callback is called, and passed a `pack` data structure. You can then manipulate the internal state of your component and turn lights on and off. 
 
 Aside from being tedious and difficult to maintain, those delay(50) calls add up over time and create dependencies among the different parts of your pack. This can be frustrating --especially to non-programmers. Photons uses no delays, and each component can decide how often it is called. 
 
