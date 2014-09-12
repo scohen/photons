@@ -3,7 +3,7 @@ photons
 
 Arduino library for controlling a Proton Pack or anything else connected to TLC 5940 chips.
 
-So it's come to this, you're building a proton pack. Congratulations. Even worse, you're going the Arduino route and are now scouring the internet for help. Congratulations, you've found some. 
+So it's come to this, you're building a proton pack. Even worse, you're going the Arduino route and are now scouring the internet for help. Congratulations, you've found some. 
 
 What we have here is a library for controlling your proton pack. The setup it works with is as follows: You have an arduino of some kind, and the lights in the pack are controlled by several [TLC 5940](http://www.ti.com/product/tlc5940) chips. The advantage of using these chips over direct wiring is that you can control literally hundreds of LEDs with one chip. You can also use shift registers, but you'll have to solder a bunch of resistors, which is not fun.
 
