@@ -173,3 +173,24 @@ void loop() {
   pack.update(); // This is what starts the onUpdate callback. 
 }
 ```
+
+#### Event Types
+
+Photons emits the following events:
+
+`onUpdate(Pack pack)`: The heart of the Ghostbusters. onUpdate is called whenever the pack's update function is called and your component is ready to receive an update. This is after the number of milliseconds you specified in `callAgainIn` has elapsed.
+
+`onFiringStart(Pack pack)`: Called whenever the intensify (fire) button is pressed. 
+    
+`onFiringStop(Pack pack)`: Called when the intensify (fire) button is released.
+
+`onPackStartUp(Pack pack);` Called when the activate switch is flipped 'on'.
+
+`onPackShutDown(Pack pack)`; Called when the activate switch is flipped 'off'.
+    
+`onPackInitStart(Pack pack)`; I've defined the first five seconds after the pack has been switched on as the 'init' period. This is called when the 'init' period starts.
+
+`onPackInitComplete(Pack pack)`; Called when the 'init' period ends. 
+    
+`reset(Pack pack)`; Called when the pack needs its internal state to be reset. Use this to return your components to their default states. 
+
