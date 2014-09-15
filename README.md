@@ -36,7 +36,7 @@ Instead of this, the photons library emits events based on switch throws and but
 
 Aside from being tedious and difficult to maintain, those delay(50) calls add up over time and create dependencies among the different parts of your pack. This can be frustrating --especially to non-programmers. Photons uses no delays, and each component can decide how often it is called. 
 
-The core part of the library is a `Pack Component`. A `Pack Component` addressses a single TLC chip, and has an offset. Your first TLC chip in the daisy chain has offset 0, the second has offset 1 and so on.  Let's use Photons to cycle two lights. 
+The core part of the library is a `Pack Component`. A `Pack Component` addressses a single TLC chip, and has an offset. Your first TLC chip in the daisy chain has offset 0, the second has offset 16 and so on.  Let's use Photons to cycle two lights. 
 
 The first step is to define the data structure for our lights. You can include the example directly in your sketch.
 Our structure looks like this:
