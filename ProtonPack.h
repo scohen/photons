@@ -2,10 +2,16 @@
 #ifndef ProtonPack_h
 #define ProtonPack_h
 
+#include <stdint.h>
 #include "Arduino.h"
 
 int pp_decrement(int current, int max_value);
-int pp_increment_to_max(int current, int max_value);
+int pp_mod_increment(int current, int max_value);
+
+template <typename T,unsigned S>
+inline unsigned arraysize(const T (&v)[S]) {
+    return S;
+}
 
 template<typename Data>
 class Vector {
@@ -64,9 +70,10 @@ typedef struct _protonpack {
     boolean is_firing;
 } Pack;
 
+class ProtonPack;
 
 class PackComponent {
-public:    
+public:
     PackComponent(int offset);
     int _offset;
     unsigned long _last_updated;
@@ -74,6 +81,7 @@ public:
     unsigned long _next_call_time;
     void callAgainIn(int num_millis);
     bool isReadyToUpdate();
+    void setPack(ProtonPack *pack);
     virtual void onUpdate(Pack pack);
     virtual void onActivateButtonPress(Pack pack);
     virtual void onFiringStart(Pack pack);
@@ -86,6 +94,7 @@ public:
 
 protected:
     int offset;
+    ProtonPack *_proton_pack;
     void setLed(int ledNumber, int value);
 
 };
@@ -98,16 +107,18 @@ public:
     void initialize();
     void reset();
     void addComponent(PackComponent *component);
+    void setLed(int offset, int value);
 
 protected:
     Pack _pack;
     Vector<PackComponent*> _components;
+    int *_led_state;
+    bool _led_state_changed;
     int _power_switch_id;
     int _activate_switch_id;
     int _power_button_state;
     int _activate_button_state;
-
-
+    int _num_leds;
 };
 
 #endif
