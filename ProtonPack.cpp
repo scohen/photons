@@ -70,8 +70,10 @@ ProtonPack::ProtonPack(int power_switch_id,
     _activate_switch_id = activate_switch_id;
     _num_leds = NUM_TLCS * 16;
     _led_state = new int[_num_leds];
-
+    _init_millis = 5000;
     reset();
+    pinMode(_power_switch_id, INPUT);
+    pinMode(_activate_switch_id, INPUT);
 }
 
 void resetPack(Pack* _pack) {
@@ -121,24 +123,26 @@ void ProtonPack::update() {
 
     boolean shutting_down = false;
     boolean starting_up = false;
-    boolean is_initializing_now = (_pack.now - _pack.started_at) < 5000;
+    boolean is_initializing_now = (_pack.now - _pack.started_at) < _init_millis;
 
-    if (is_initializing_now && ! _pack.is_initializing) {
-        Serial.println("Init begin");
-        for(int i=0; i < _components.size(); i++) {
-            PackComponent *c = _components[i];
-            c->onPackInitStart(_pack);
+    if (_pack.is_on) {
+        if (is_initializing_now && ! _pack.is_initializing) {
+            Serial.println("Init begin");
+            for(int i=0; i < _components.size(); i++) {
+                PackComponent *c = _components[i];
+                c->onPackInitStart(_pack);
+            }
+        } else if (!is_initializing_now && _pack.is_initializing) {
+            for(int i=0; i < _components.size(); i++) {
+                PackComponent *c = _components[i];
+                c->onPackInitComplete(_pack);
+            }
+            Serial.println("init end");
         }
-    } else if (!is_initializing_now && _pack.is_initializing) {
-        for(int i=0; i < _components.size(); i++) {
-            PackComponent *c = _components[i];
-            c->onPackInitComplete(_pack);
-        }
-        Serial.println("init end");
+
+       _pack.is_initializing = is_initializing_now;
     }
-
-    _pack.is_initializing = is_initializing_now;
-
+    
     if (millis() - last_debounce_time > 200) {
         if ( latestPowerButtonState != _power_button_state) {
             if(_pack.is_on) {

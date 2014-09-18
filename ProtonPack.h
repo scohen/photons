@@ -114,6 +114,7 @@ protected:
     Vector<PackComponent*> _components;
     int *_led_state;
     bool _led_state_changed;
+    int _init_millis;
     int _power_switch_id;
     int _activate_switch_id;
     int _power_button_state;
