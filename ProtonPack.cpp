@@ -86,6 +86,7 @@ void resetPack(Pack* _pack) {
 
 void ProtonPack::reset() {
     Tlc.clear();
+    resetPack(&_pack);
     for(int i=0; i < _components.size(); i++) {
         _components[i]->reset(_pack);
     }
@@ -123,7 +124,7 @@ void ProtonPack::update() {
 
     boolean shutting_down = false;
     boolean starting_up = false;
-    boolean is_initializing_now = (_pack.now - _pack.started_at) < _init_millis;
+    boolean is_initializing_now =  (_pack.now - _pack.started_at) < _init_millis;
 
     if (_pack.is_on) {
         if (is_initializing_now && ! _pack.is_initializing) {
