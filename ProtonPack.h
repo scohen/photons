@@ -74,11 +74,7 @@ class ProtonPack;
 
 class PackComponent {
 public:
-    PackComponent(int offset);
-    int _offset;
-    unsigned long _last_updated;
-    unsigned long _started_at;
-    unsigned long _next_call_time;
+    PackComponent(int offset, int num_leds);
     void callAgainIn(int num_millis);
     bool isReadyToUpdate();
     void setPack(ProtonPack *pack);
@@ -91,12 +87,17 @@ public:
     virtual void onPackInitStart(Pack pack);
     virtual void onPackInitComplete(Pack pack);
     virtual void reset(Pack pack);
-
+    
 protected:
-    int offset;
     ProtonPack *_proton_pack;
     void setLed(int ledNumber, int value);
-
+    unsigned short _num_leds;
+    
+private:
+    int _offset;
+    unsigned long _last_updated;
+    unsigned long _started_at;
+    unsigned long _next_call_time;    
 };
 
 class ProtonPack {

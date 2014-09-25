@@ -30,7 +30,9 @@ void PackComponent::callAgainIn(int num_millis) {
 }
 
 void PackComponent::setLed(int ledNum, int val) {
-    _proton_pack->setLed(ledNum + _offset, val);
+    if ( ledNum < _num_leds) {
+        _proton_pack->setLed(ledNum + _offset, val);
+    }
 }
 
 
@@ -39,8 +41,9 @@ void PackComponent::reset(Pack pack) {
     _next_call_time = 0;
 }
 
-PackComponent::PackComponent(int offset) {
+PackComponent::PackComponent(int offset, int num_leds) {
     _offset = offset;
+    _num_leds = num_leds;
 }
 
 bool PackComponent::isReadyToUpdate() {
