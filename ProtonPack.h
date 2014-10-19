@@ -76,8 +76,8 @@ class PackComponent {
 public:
     PackComponent(int offset, int num_leds);
     void callAgainIn(int num_millis);
-    bool isReadyToUpdate();
     void setPack(ProtonPack *pack);
+    virtual bool isReadyToUpdate();
     virtual void onUpdate(Pack pack);
     virtual void onActivateButtonPress(Pack pack);
     virtual void onFiringStart(Pack pack);
@@ -87,17 +87,23 @@ public:
     virtual void onPackInitStart(Pack pack);
     virtual void onPackInitComplete(Pack pack);
     virtual void reset(Pack pack);
-    
+
 protected:
     ProtonPack *_proton_pack;
     void setLed(int ledNumber, int value);
     unsigned short _num_leds;
-    
+
 private:
     int _offset;
     unsigned long _last_updated;
     unsigned long _started_at;
-    unsigned long _next_call_time;    
+    unsigned long _next_call_time;
+};
+
+class PackListener: public PackComponent {
+public:
+    PackListener();
+    bool isReadyToUpdate();
 };
 
 class ProtonPack {
@@ -108,13 +114,10 @@ public:
     void initialize();
     void reset();
     void addComponent(PackComponent *component);
-    void setLed(int offset, int value);
 
 protected:
     Pack _pack;
     Vector<PackComponent*> _components;
-    int *_led_state;
-    bool _led_state_changed;
     int _init_millis;
     int _power_switch_id;
     int _activate_switch_id;
