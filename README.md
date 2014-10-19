@@ -57,7 +57,7 @@ class Toggler : public PackComponent {
 The first line `#include <ProtonPack.h>`, includes our library. Then we define our component, called Toggler. We listen to two events, `onUpdate` and `reset`.  `onUpdate` is called whenever the pack is ready to refresh our component. `reset` is called when the pack starts up (and a couple of other times) and should reset your component to its initial state. Now let's build the code that makes the lights turn on and off.
 
 ```C++
-Toggler::Toggler(int offset) : PackComponent(offset) {
+Toggler::Toggler(int offset) : PackComponent(offset, 2) {
   // this is called when you create a Toggler
 }
 
@@ -77,7 +77,7 @@ void Toggler::onUpdate(Pack pack) {
 }
 ```
 
-That was pretty easy! First, we set the current led to a value of 4000 (the TLC allows brightness values between 0 and 4096), and then we switch the current led for the next iteration. Finally, we tell the library to call us again in 1000 milliseconds, which is one second. This is one of the neat things about photons, you tell it when you want to be notified, and it keeps track of the time for you, calling you after that delay. This will cause each light to light up for a second. 
+That was pretty easy! First, you'llnotice that we set the number of LEDs to 2 in the constructor (`Toggler::Toggler(int offset) : PackComponent(offset, 2)`). This lets the library ensure that one component doesn't mess witn another. Then we set the current led to a value of 4000 (the TLC allows brightness values between 0 and 4096), and then we switch the current led for the next iteration. Finally, we tell the library to call us again in 1000 milliseconds, which is one second. This is one of the neat things about photons, you tell it when you want to be notified, and it keeps track of the time for you, calling you after that delay. This will cause each light to light up for a second. 
 
 But there's a problem, do you see it? 
 
@@ -136,7 +136,7 @@ class Toggler : public PackComponent {
     int currentLed;
 };
 
-Toggler::Toggler(int offset) : PackComponent(offset) {
+Toggler::Toggler(int offset) : PackComponent(offset, 2) {
   // this is called when you create a Toggler
 }
 

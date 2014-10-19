@@ -30,8 +30,8 @@ void PackComponent::callAgainIn(int num_millis) {
 }
 
 void PackComponent::setLed(int ledNum, int val) {
-    if ( ledNum < _num_leds) {
-        _proton_pack->setLed(ledNum + _offset, val);
+    if (ledNum < _num_leds) {
+        Tlc.set(ledNum + _offset, val);
     }
 }
 
@@ -51,7 +51,6 @@ bool PackComponent::isReadyToUpdate() {
 }
 
 void PackComponent::onUpdate(Pack pack) {
-    Serial.println("onUpdate for PackComponent");
 }
 
 void PackComponent::setPack(ProtonPack *pack) {
@@ -67,12 +66,20 @@ void PackComponent::onPackInitStart(Pack pack) {}
 void PackComponent::onPackInitComplete(Pack pack) {}
 
 
+PackListener::PackListener() : PackComponent(-1, 0) {
+
+}
+
+bool PackListener::isReadyToUpdate() {
+    return false;
+}
+
+
 ProtonPack::ProtonPack(int power_switch_id,
                        int activate_switch_id) {
     _power_switch_id = power_switch_id;
     _activate_switch_id = activate_switch_id;
     _num_leds = NUM_TLCS * 16;
-    _led_state = new int[_num_leds];
     _init_millis = 5000;
     reset();
     pinMode(_power_switch_id, INPUT);
@@ -88,15 +95,13 @@ void resetPack(Pack* _pack) {
 }
 
 void ProtonPack::reset() {
-    Tlc.clear();
+
     resetPack(&_pack);
     for(int i=0; i < _components.size(); i++) {
         _components[i]->reset(_pack);
     }
 
-    for(int i=0; i < _num_leds; i++) {
-        _led_state[i] = 0;
-    }
+    Tlc.clear();
 }
 
 void ProtonPack::initialize() {
@@ -110,17 +115,8 @@ void ProtonPack::addComponent(PackComponent *component) {
     component->setPack(this);
 }
 
-void ProtonPack::setLed(int offset, int value) {
-    if (_led_state[offset] != value) {
-        _led_state_changed = true;
-        _led_state[offset] = value;
-    }
-}
-
-
 void ProtonPack::update() {
     _pack.now = millis();
-    _led_state_changed = false;
 
     int latestPowerButtonState = digitalRead(_power_switch_id);;
     int latestActivateButtonState = digitalRead(_activate_switch_id);;
@@ -144,9 +140,9 @@ void ProtonPack::update() {
             Serial.println("init end");
         }
 
-       _pack.is_initializing = is_initializing_now;
+        _pack.is_initializing = is_initializing_now;
     }
-    
+
     if (millis() - last_debounce_time > 200) {
         if ( latestPowerButtonState != _power_button_state) {
             if(_pack.is_on) {
@@ -184,7 +180,7 @@ void ProtonPack::update() {
         Serial.println("starting");
         _pack.now = millis();
         _pack.started_at = millis();
-        
+
         for(int i=0; i < _components.size(); i++) {
             PackComponent *c = _components[i];
             c->reset(_pack);
@@ -207,10 +203,7 @@ void ProtonPack::update() {
                 c->onUpdate(_pack);
             }
         }
-
-        for(int i=0; i < _num_leds; i++) {
-            Tlc.set(i, _led_state[i]);
-        }
     }
+
     Tlc.update();
 }
